@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend (mvn verify)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: mvn verify
+        run: mvn -B verify
+
+  frontend:
+    name: Frontend (npm ci + ng build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Frontend jeszcze nie istnieje w /frontend — job jest gotowy na przyszłość.
+      # Jeśli katalogu brak, kolejne kroki są pomijane (CI pozostaje zielone).
+      - name: Detect frontend project
+        id: detect
+        run: |
+          if [ -f frontend/package.json ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Katalog frontend/ nie istnieje — kroki npm ci / ng build pominięte (job gotowy na przyszłość)."
+          fi
+
+      - name: Set up Node 22
+        if: steps.detect.outputs.exists == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: npm ci
+        if: steps.detect.outputs.exists == 'true'
+        working-directory: frontend
+        run: npm ci
+
+      - name: ng build
+        if: steps.detect.outputs.exists == 'true'
+        working-directory: frontend
+        run: npm run build
