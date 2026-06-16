@@ -13,6 +13,7 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 import pl.panzerhund.tracker.user.entity.User;
 
 import java.time.Instant;
@@ -47,6 +48,7 @@ public class SavedListing {
     @Column(columnDefinition = "text")
     private String notes;
 
-    @Column(name = "saved_at", nullable = false)
+    @CreationTimestamp
+    @Column(name = "saved_at", nullable = false, updatable = false)
     private Instant savedAt;
 }

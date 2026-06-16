@@ -14,6 +14,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 import pl.panzerhund.tracker.listing.entity.Listing;
 import pl.panzerhund.tracker.user.entity.User;
 
@@ -47,6 +48,7 @@ public class Notification {
     @Column(name = "is_read", nullable = false)
     private boolean read;
 
-    @Column(name = "created_at", nullable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 }

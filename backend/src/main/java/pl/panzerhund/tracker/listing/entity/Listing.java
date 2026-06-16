@@ -12,6 +12,7 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import pl.panzerhund.tracker.category.entity.Category;
@@ -84,9 +85,11 @@ public class Listing {
     @Column(nullable = false, length = 16)
     private ListingStatus status;
 
-    @Column(name = "first_seen_at", nullable = false)
+    @CreationTimestamp
+    @Column(name = "first_seen_at", nullable = false, updatable = false)
     private Instant firstSeenAt;
 
+    @CreationTimestamp
     @Column(name = "last_seen_at", nullable = false)
     private Instant lastSeenAt;
 }

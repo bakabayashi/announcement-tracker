@@ -13,7 +13,6 @@ import pl.panzerhund.tracker.listing.entity.Source;
 import pl.panzerhund.tracker.user.UserRepository;
 import pl.panzerhund.tracker.user.entity.User;
 
-import java.time.Instant;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,21 +43,20 @@ class JpaMappingTest {
         listing.setUrl("https://olx.pl/1");
         listing.setStatus(ListingStatus.ACTIVE);
         listing.setAttributes(Map.of("area", 1000, "fenced", true));
-        listing.setFirstSeenAt(Instant.now());
-        listing.setLastSeenAt(Instant.now());
+        // first_seen_at / last_seen_at NOT ustawiane ręcznie - @CreationTimestamp
         Listing persistedListing = listings.saveAndFlush(listing);
 
         User user = new User();
         user.setGoogleSub("sub-1");
         user.setEmail("tester@panzerhund.pl");
         user.setName("Tester");
-        user.setCreatedAt(Instant.now());
+        // created_at NOT ustawiane ręcznie - @CreationTimestamp
         User persistedUser = users.saveAndFlush(user);
 
         SavedListing saved = new SavedListing();
         saved.setUser(persistedUser);
         saved.setListing(persistedListing);
-        saved.setSavedAt(Instant.now());
+        // saved_at NOT ustawiane ręcznie - @CreationTimestamp
         savedListings.saveAndFlush(saved);
 
         // JSON round-trip
@@ -66,6 +64,11 @@ class JpaMappingTest {
         assertThat(reloaded.getAttributes())
                 .containsEntry("area", 1000)
                 .containsEntry("fenced", true);
+
+        // auto-timestampy (@CreationTimestamp) wypełnione mimo braku ręcznego setowania
+        assertThat(reloaded.getFirstSeenAt()).isNotNull();
+        assertThat(reloaded.getLastSeenAt()).isNotNull();
+        assertThat(persistedUser.getCreatedAt()).isNotNull();
 
         // findery + asocjacje
         assertThat(listings.findBySourceAndExternalId(Source.OLX, "ext-1")).isPresent();

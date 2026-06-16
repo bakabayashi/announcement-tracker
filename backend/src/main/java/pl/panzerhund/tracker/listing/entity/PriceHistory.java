@@ -12,6 +12,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -39,6 +40,7 @@ public class PriceHistory {
     @Column(nullable = false, length = 3)
     private String currency;
 
-    @Column(name = "recorded_at", nullable = false)
+    @CreationTimestamp
+    @Column(name = "recorded_at", nullable = false, updatable = false)
     private Instant recordedAt;
 }
