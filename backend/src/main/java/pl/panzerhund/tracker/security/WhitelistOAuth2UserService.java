@@ -44,8 +44,15 @@ public class WhitelistOAuth2UserService implements OAuth2UserService<OAuth2UserR
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User user = delegate.loadUser(userRequest);
         enforceWhitelist(user.getAttribute("email"));
-        provision(user);
-        return user;
+        User entity = provision(user);
+        return new AppUserPrincipal(
+                entity.getId(),
+                entity.getEmail(),
+                entity.getName(),
+                entity.getPictureUrl(),
+                user.getAuthorities(),
+                user.getAttributes(),
+                "sub");
     }
 
     private void enforceWhitelist(String email) {
@@ -60,13 +67,13 @@ public class WhitelistOAuth2UserService implements OAuth2UserService<OAuth2UserR
         }
     }
 
-    private void provision(OAuth2User user) {
+    private User provision(OAuth2User user) {
         String googleSub = user.getName(); // user-name-attribute = "sub"
         User entity = users.findByGoogleSub(googleSub).orElseGet(User::new);
         entity.setGoogleSub(googleSub);
         entity.setEmail(user.getAttribute("email"));
         entity.setName(user.getAttribute("name"));
         entity.setPictureUrl(user.getAttribute("picture"));
-        users.save(entity);
+        return users.save(entity);
     }
 }

@@ -15,6 +15,7 @@ import pl.panzerhund.tracker.user.entity.User;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -28,6 +29,8 @@ import static org.mockito.Mockito.when;
 @SuppressWarnings("unchecked")
 class WhitelistOAuth2UserServiceTest {
 
+    private static final UUID USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
     private SecurityProperties properties;
     private UserRepository users;
     private OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate;
@@ -40,7 +43,11 @@ class WhitelistOAuth2UserServiceTest {
         delegate = mock(OAuth2UserService.class);
         service = new WhitelistOAuth2UserService(delegate, properties, users);
         when(users.findByGoogleSub(any())).thenReturn(Optional.empty());
-        when(users.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(users.save(any(User.class))).thenAnswer(inv -> {
+            User saved = inv.getArgument(0);
+            saved.setId(USER_ID); // simulate generated id
+            return saved;
+        });
     }
 
     private void googleReturns(String email) {
@@ -95,5 +102,20 @@ class WhitelistOAuth2UserServiceTest {
         assertThat(saved.getEmail()).isEqualTo("new@example.com");
         assertThat(saved.getName()).isEqualTo("Jan Kowalski");
         assertThat(saved.getPictureUrl()).isEqualTo("http://pic/1");
+    }
+
+    @Test
+    void returnsEnrichedPrincipalWithInternalUserId() {
+        properties.setAllowedEmails(List.of());
+        googleReturns("new@example.com");
+
+        OAuth2User result = service.loadUser(null);
+
+        assertThat(result).isInstanceOf(AppUserPrincipal.class);
+        AppUserPrincipal principal = (AppUserPrincipal) result;
+        assertThat(principal.getUserId()).isEqualTo(USER_ID);
+        assertThat(principal.getEmail()).isEqualTo("new@example.com");
+        assertThat(principal.getFullName()).isEqualTo("Jan Kowalski");
+        assertThat(principal.getName()).isEqualTo("sub-123"); // OAuth2 name attribute = sub
     }
 }
