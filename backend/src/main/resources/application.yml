@@ -25,6 +25,11 @@ app:
     delay-max-seconds: 8
     window-start: "22:00"
     window-duration-minutes: 360
+    olx:
+      base-url: https://www.olx.pl/api/partner
+      access-token: ${OLX_ACCESS_TOKEN:}
+      api-version: "2.0"
+      page-size: 50
 
 ---
 # --- dev profile: H2 in-memory, Flyway disabled, schema generated from entities (create-drop) ---
