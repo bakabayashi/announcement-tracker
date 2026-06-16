@@ -10,11 +10,14 @@ import org.springframework.web.bind.annotation.RestController;
 import pl.panzerhund.tracker.category.entity.Category;
 import pl.panzerhund.tracker.common.dto.PageResponse;
 import pl.panzerhund.tracker.listing.dto.ListingResponse;
+import pl.panzerhund.tracker.listing.dto.PriceHistoryResponse;
+import pl.panzerhund.tracker.listing.dto.PriceStatsResponse;
 import pl.panzerhund.tracker.listing.entity.ListingStatus;
 import pl.panzerhund.tracker.listing.entity.Source;
 import pl.panzerhund.tracker.listing.mapper.ListingMapper;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -23,6 +26,8 @@ import java.util.UUID;
 public class ListingController {
 
     private final ListingService service;
+    private final PriceHistoryService priceHistoryService;
+    private final PriceStatsService priceStatsService;
     private final ListingMapper mapper;
 
     @GetMapping
@@ -42,5 +47,15 @@ public class ListingController {
     @GetMapping("/{id}")
     public ListingResponse get(@PathVariable UUID id) {
         return mapper.toResponse(service.getById(id));
+    }
+
+    @GetMapping("/{id}/price-history")
+    public List<PriceHistoryResponse> priceHistory(@PathVariable UUID id) {
+        return priceHistoryService.forListing(id).stream().map(mapper::toResponse).toList();
+    }
+
+    @GetMapping("/{id}/price-stats")
+    public PriceStatsResponse priceStats(@PathVariable UUID id) {
+        return priceStatsService.forListing(id);
     }
 }
