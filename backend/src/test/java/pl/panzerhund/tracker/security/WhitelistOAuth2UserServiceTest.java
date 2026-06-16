@@ -1,0 +1,99 @@
+package pl.panzerhund.tracker.security;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import pl.panzerhund.tracker.user.UserRepository;
+import pl.panzerhund.tracker.user.entity.User;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@SuppressWarnings("unchecked")
+class WhitelistOAuth2UserServiceTest {
+
+    private SecurityProperties properties;
+    private UserRepository users;
+    private OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate;
+    private WhitelistOAuth2UserService service;
+
+    @BeforeEach
+    void setUp() {
+        properties = new SecurityProperties();
+        users = mock(UserRepository.class);
+        delegate = mock(OAuth2UserService.class);
+        service = new WhitelistOAuth2UserService(delegate, properties, users);
+        when(users.findByGoogleSub(any())).thenReturn(Optional.empty());
+        when(users.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+    }
+
+    private void googleReturns(String email) {
+        OAuth2User user = new DefaultOAuth2User(
+                List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                Map.of("sub", "sub-123", "email", email, "name", "Jan Kowalski", "picture", "http://pic/1"),
+                "sub");
+        when(delegate.loadUser(any())).thenReturn(user);
+    }
+
+    @Test
+    void emptyWhitelistAllowsEveryoneAndProvisions() {
+        properties.setAllowedEmails(List.of());
+        googleReturns("anyone@example.com");
+
+        OAuth2User result = service.loadUser(null);
+
+        assertThat(result).isNotNull();
+        verify(users).save(any(User.class));
+    }
+
+    @Test
+    void whitelistedEmailAllowedCaseInsensitive() {
+        properties.setAllowedEmails(List.of("allowed@panzerhund.pl"));
+        googleReturns("Allowed@Panzerhund.PL");
+
+        assertThatNoException().isThrownBy(() -> service.loadUser(null));
+        verify(users).save(any(User.class));
+    }
+
+    @Test
+    void nonWhitelistedEmailRejectedAndNotProvisioned() {
+        properties.setAllowedEmails(List.of("allowed@panzerhund.pl"));
+        googleReturns("intruder@example.com");
+
+        assertThatThrownBy(() -> service.loadUser(null))
+                .isInstanceOf(OAuth2AuthenticationException.class);
+        verify(users, never()).save(any());
+    }
+
+    @Test
+    void provisionsUserWithGoogleAttributes() {
+        properties.setAllowedEmails(List.of());
+        googleReturns("new@example.com");
+
+        service.loadUser(null);
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(users).save(captor.capture());
+        User saved = captor.getValue();
+        assertThat(saved.getGoogleSub()).isEqualTo("sub-123");
+        assertThat(saved.getEmail()).isEqualTo("new@example.com");
+        assertThat(saved.getName()).isEqualTo("Jan Kowalski");
+        assertThat(saved.getPictureUrl()).isEqualTo("http://pic/1");
+    }
+}

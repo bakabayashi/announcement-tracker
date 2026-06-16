@@ -3,9 +3,25 @@ spring:
     name: announcement-tracker
   profiles:
     active: dev
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:dummy-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:dummy-client-secret}
+            scope:
+              - email
+              - profile
+
+# Login whitelist: empty = dev mode (every authenticated Google user passes),
+# non-empty = only listed addresses, everyone else gets 403.
+app:
+  security:
+    allowed-emails: []
 
 ---
-# --- Profil dev: H2 in-memory, Flyway wyłączone, schema z encji (create-drop) ---
+# --- dev profile: H2 in-memory, Flyway disabled, schema generated from entities (create-drop) ---
 spring:
   config:
     activate:
@@ -30,7 +46,7 @@ spring:
     enabled: false
 
 ---
-# --- Profil prod: PostgreSQL + Flyway (placeholdery, uzupełnimy później) ---
+# --- prod profile: PostgreSQL + Flyway (env-driven values) ---
 spring:
   config:
     activate:
