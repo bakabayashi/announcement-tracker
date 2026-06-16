@@ -341,18 +341,15 @@ i rysuje dwie linie (historia ceny ogłoszenia + średnia rynkowa) przez PrimeNG
 Lokalizacja: `backend/src/main/resources/db/migration`. Nazewnictwo `V{n}__opis.sql`.
 **Nigdy nie modyfikujemy istniejącej migracji** — zmiany tylko jako nowe `V{n+1}`.
 
-| Wersja | Plik                                   | Co tworzy                                                                 |
-|--------|----------------------------------------|---------------------------------------------------------------------------|
-| V1     | `V1__create_users.sql`                 | `users` (+ unique `google_sub`, `email`)                                  |
-| V2     | `V2__create_listings.sql`              | `listings` (globalny, bez `user_id`; kolumna `attributes JSONB`, enumy jako varchar+check, unique `(source, external_id)`) |
-| V3     | `V3__create_price_history.sql`         | `price_history` (FK `listing_id`)                                         |
-| V4     | `V4__create_saved_listings.sql`        | `saved_listings` (FK `user_id`, `listing_id`, unique `(user_id, listing_id)`) |
-| V5     | `V5__create_search_criteria.sql`       | `search_criteria` (`filters JSONB`, FK `user_id`)                         |
-| V6     | `V6__create_notifications.sql`         | `notifications` (FK `user_id`, `listing_id`)                             |
-| V7     | `V7__create_duplicate_groups.sql`      | `duplicate_groups` + `duplicate_group_members` **(założenie)**           |
-| V8     | `V8__create_indexes.sql`               | indeksy: `listings(status, last_seen_at)`, `listings(category, region)`, GIN na `listings.attributes` i `search_criteria.filters`, `notifications(user_id, is_read)`, `price_history(listing_id, recorded_at)` |
+Schemat początkowy to **jedna migracja** (`V1__init_schema.sql`) — wszystkie tabele
+powstają naraz, więc dzielenie ich na osobne pliki nie ma sensu. Osobne `V{n}` rezerwujemy
+dla późniejszych, przyrostowych zmian (np. nowa kolumna, nowy indeks, poluzowanie ograniczenia).
 
-Numeracja sekwencyjna od V1. Kolejność wymuszona zależnościami FK (users → listings → reszta).
+| Wersja | Plik                  | Co tworzy                                                                 |
+|--------|-----------------------|---------------------------------------------------------------------------|
+| V1     | `V1__init_schema.sql` | komplet tabel: `users`, `listings` (globalny, bez `user_id`; `attributes JSONB`; enumy varchar+check; unique `(source, external_id)`; `price`/`currency`/`city`/`region` nullable), `price_history`, `saved_listings` (unique `(user_id, listing_id)`), `search_criteria` (`filters JSONB`), `notifications`, `duplicate_groups` + `duplicate_group_members` — oraz indeksy: `listings(status, last_seen_at)`, `listings(category, region)`, GIN na `listings.attributes` i `search_criteria.filters`, `notifications(user_id, is_read)`, `price_history(listing_id, recorded_at)` |
+
+Kolejność `CREATE TABLE` w pliku wymuszona zależnościami FK (users → listings → reszta).
 Seed/dane referencyjne kategorii (PLOT/CAR) — w kodzie/enumie, nie w migracji.
 
 ---
@@ -361,11 +358,11 @@ Seed/dane referencyjne kategorii (PLOT/CAR) — w kodzie/enumie, nie w migracji.
 
 Elementy dodane w celu spójności, których CLAUDE.md nie precyzuje — **do akceptacji lub korekty**:
 
-1. **`DuplicateGroupMember`** (tabela + V7) — grupa duplikatów potrzebuje listy członków;
+1. **`DuplicateGroupMember`** (tabela w `V1__init_schema.sql`) — grupa duplikatów potrzebuje listy członków;
    CLAUDE.md wymienia tylko `DuplicateGroup` z `primary_listing_id`.
 2. **Endpointy `saved-listings`, `search-criteria` CRUD, `categories`, `/me`** — niewymienione
    wprost, ale wynikają z modelu danych i UI.
-3. **`V8__create_indexes.sql`** — osobna migracja na indeksy (w tym GIN dla JSONB).
+3. **Indeksy** — w tej samej migracji `V1__init_schema.sql` co tabele (w tym GIN dla JSONB).
 4. **`POST /api/v1/admin/scraper/run`** — manualny trigger scrapera dla zalogowanego usera
    (development); poza tym `scraper` działa w tle (scheduler).
 5. **`PriceStatsResponse`** jako DTO dla `/price-stats` (średnia + mediana).

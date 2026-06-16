@@ -1,2 +1,10 @@
 /.idea/
 /backend/target/
+
+# Sekrety / środowisko
+.env
+
+# Frontend
+/announcement-frontend/node_modules/
+/announcement-frontend/dist/
+/announcement-frontend/.angular/
