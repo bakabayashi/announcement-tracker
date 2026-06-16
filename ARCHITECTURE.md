@@ -212,7 +212,8 @@ suffix `Request` / `Response`. Listy stronicowane zwracają `Page<T>` (Spring).
 | Metoda | Ścieżka                                 | DTO in | DTO out                   |
 |--------|-----------------------------------------|--------|---------------------------|
 | GET    | `/api/v1/notifications`                 | query  | `Page<NotificationResponse>` |
-| GET    | `/api/v1/notifications/unread-count`    | —      | `UnreadCountResponse` (polling 30s) |
+| GET    | `/api/v1/notifications/unread-count`    | —      | `UnreadCountResponse` (stan początkowy) |
+| GET    | `/api/v1/notifications/stream`          | —      | SSE `text/event-stream` (live push przy nowym powiadomieniu) |
 | POST   | `/api/v1/notifications/{id}/read`       | —      | `NotificationResponse`    |
 | POST   | `/api/v1/notifications/read-all`        | —      | 204                       |
 
@@ -311,7 +312,7 @@ src/app
 │   └── models                        # interfejsy DTO (mirror backendu)
 ├── layout
 │   ├── toolbar.component.ts          # pasek górny
-│   └── notification-bell.component.ts# badge unread, polling 30s
+│   └── notification-bell.component.ts# badge unread, SSE (EventSource)
 ├── features
 │   ├── auth
 │   │   └── login.component.ts

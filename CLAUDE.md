@@ -154,7 +154,8 @@ Dwa poziomy:
 
 ## Powiadomienia
 Tylko bell w UI, bez email/push.
-- Polling co 30s: `GET /api/v1/notifications/unread-count`
+- Stan początkowy: `GET /api/v1/notifications/unread-count`
+- Live update: SSE `GET /api/v1/notifications/stream` (text/event-stream) — serwer pushuje przy nowym powiadomieniu
 - Panel: lista z is_read, oznaczanie jako przeczytane
 - Typy: PRICE_DROP, NEW_MATCH, REPOSTED
 
