@@ -1,10 +1,10 @@
+# IDE
 /.idea/
+
+# Build backendu
 /backend/target/
 
 # Sekrety / środowisko
 .env
 
-# Frontend
-/announcement-frontend/node_modules/
-/announcement-frontend/dist/
-/announcement-frontend/.angular/
+# Artefakty frontendu ignoruje własny frontend/.gitignore (Angular)

@@ -42,7 +42,7 @@ services:
 
   frontend:
     build:
-      context: ./announcement-frontend
+      context: ./frontend
     container_name: tracker-frontend
     depends_on:
       - backend
