@@ -1,0 +1,19 @@
+# Domyślnie: git normalizuje końce linii do LF w repo i w working tree.
+* text=auto eol=lf
+
+# Skrypty powłoki zawsze LF (inaczej nie odpalą się na Linux/CI).
+*.sh text eol=lf
+
+# Pliki wsadowe Windows zawsze CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binaria — bez normalizacji końców linii.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.jar  binary
+*.woff  binary
+*.woff2 binary
