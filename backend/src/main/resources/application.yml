@@ -19,6 +19,12 @@ spring:
 app:
   security:
     allowed-emails: []
+  scraper:
+    max-pages-per-criteria: 5
+    delay-min-seconds: 3
+    delay-max-seconds: 8
+    window-start: "22:00"
+    window-duration-minutes: 360
 
 ---
 # --- dev profile: H2 in-memory, Flyway disabled, schema generated from entities (create-drop) ---
