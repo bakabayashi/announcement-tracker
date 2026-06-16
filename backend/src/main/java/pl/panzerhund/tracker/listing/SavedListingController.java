@@ -17,7 +17,7 @@ import pl.panzerhund.tracker.listing.dto.SaveListingRequest;
 import pl.panzerhund.tracker.listing.dto.SavedListingResponse;
 import pl.panzerhund.tracker.listing.dto.UpdateSavedListingRequest;
 import pl.panzerhund.tracker.listing.mapper.SavedListingMapper;
-import pl.panzerhund.tracker.security.AppUserPrincipal;
+import pl.panzerhund.tracker.user.AppUserPrincipal;
 
 import java.util.List;
 import java.util.UUID;

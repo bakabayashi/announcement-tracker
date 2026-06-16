@@ -1,4 +1,4 @@
-package pl.panzerhund.tracker.security;
+package pl.panzerhund.tracker.user;
 
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;

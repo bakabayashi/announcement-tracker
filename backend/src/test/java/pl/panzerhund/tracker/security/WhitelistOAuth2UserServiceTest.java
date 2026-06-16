@@ -9,6 +9,7 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import pl.panzerhund.tracker.user.AppUserPrincipal;
 import pl.panzerhund.tracker.user.UserRepository;
 import pl.panzerhund.tracker.user.entity.User;
 

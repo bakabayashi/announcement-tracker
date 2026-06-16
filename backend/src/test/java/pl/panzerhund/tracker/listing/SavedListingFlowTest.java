@@ -15,7 +15,7 @@ import pl.panzerhund.tracker.listing.dto.UpdateSavedListingRequest;
 import pl.panzerhund.tracker.listing.entity.Listing;
 import pl.panzerhund.tracker.listing.entity.ListingStatus;
 import pl.panzerhund.tracker.listing.entity.Source;
-import pl.panzerhund.tracker.security.AppUserPrincipal;
+import pl.panzerhund.tracker.user.AppUserPrincipal;
 import pl.panzerhund.tracker.user.UserRepository;
 import pl.panzerhund.tracker.user.entity.User;
 
