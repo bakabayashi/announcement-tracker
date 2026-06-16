@@ -21,7 +21,7 @@ import pl.panzerhund.tracker.user.entity.User;
 import java.time.Instant;
 import java.util.UUID;
 
-/** Powiadomienie (bell w UI). */
+/** Notification (bell in the UI). */
 @Entity
 @Table(name = "notifications")
 @Getter

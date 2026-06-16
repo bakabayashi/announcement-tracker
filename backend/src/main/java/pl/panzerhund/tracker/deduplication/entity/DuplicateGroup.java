@@ -18,7 +18,7 @@ import pl.panzerhund.tracker.listing.entity.Listing;
 
 import java.util.UUID;
 
-/** Grupa duplikatów. primaryListing = ogłoszenie kanoniczne. */
+/** Duplicate group. primaryListing = canonical listing. */
 @Entity
 @Table(name = "duplicate_groups")
 @Getter

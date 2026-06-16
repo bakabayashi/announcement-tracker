@@ -1,8 +1,8 @@
--- V1: początkowy schemat bazy (komplet tabel + indeksy).
--- Enumy jako VARCHAR + CHECK. Atrybuty/filtry per kategoria w JSONB.
--- Listing jest GLOBALNY (bez user_id) - jedno ogłoszenie = jeden rekord.
+-- V1: initial database schema (all tables + indexes).
+-- Enums as VARCHAR + CHECK. Per-category attributes/filters in JSONB.
+-- Listing is GLOBAL (no user_id) - one listing = one row.
 
--- == users: użytkownicy (OAuth2 Google), korzeń relacji per-user ==
+-- == users: application users (OAuth2 Google), root of all per-user relations ==
 CREATE TABLE users (
     id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     google_sub  VARCHAR(255) NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE users (
     CONSTRAINT uq_users_email      UNIQUE (email)
 );
 
--- == listings: ogłoszenia (globalne). price/currency/city/region nullable ==
+-- == listings: listings (global). price/currency/city/region nullable ==
 CREATE TABLE listings (
     id            UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
     source        VARCHAR(32)   NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE listings (
     CONSTRAINT chk_listings_status   CHECK (status   IN ('ACTIVE', 'INACTIVE', 'MERGED'))
 );
 
--- == price_history: historia cen (insert-only) ==
+-- == price_history: price history (insert-only) ==
 CREATE TABLE price_history (
     id          UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
     listing_id  UUID          NOT NULL,
@@ -50,7 +50,7 @@ CREATE TABLE price_history (
         FOREIGN KEY (listing_id) REFERENCES listings (id) ON DELETE CASCADE
 );
 
--- == saved_listings: zapisane ogłoszenia (per-user) ==
+-- == saved_listings: saved listings (per-user) ==
 CREATE TABLE saved_listings (
     id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id    UUID        NOT NULL,
@@ -64,7 +64,7 @@ CREATE TABLE saved_listings (
     CONSTRAINT uq_saved_listings_user_listing UNIQUE (user_id, listing_id)
 );
 
--- == search_criteria: kryteria wyszukiwania (per-user), filtry w JSONB ==
+-- == search_criteria: search criteria (per-user). Filters in JSONB ==
 CREATE TABLE search_criteria (
     id       UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id  UUID         NOT NULL,
@@ -76,7 +76,7 @@ CREATE TABLE search_criteria (
     CONSTRAINT chk_search_criteria_category CHECK (category IN ('PLOT', 'CAR'))
 );
 
--- == notifications: powiadomienia (bell w UI) ==
+-- == notifications: notifications (bell in the UI) ==
 CREATE TABLE notifications (
     id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id    UUID        NOT NULL,
@@ -91,7 +91,7 @@ CREATE TABLE notifications (
     CONSTRAINT chk_notifications_type CHECK (type IN ('PRICE_DROP', 'NEW_MATCH', 'REPOSTED'))
 );
 
--- == duplicate_groups + members: wykrywanie/scalanie duplikatów ==
+-- == duplicate_groups + members: duplicate detection/merging ==
 CREATE TABLE duplicate_groups (
     id                 UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     primary_listing_id UUID        NOT NULL,
@@ -112,10 +112,16 @@ CREATE TABLE duplicate_group_members (
     CONSTRAINT uq_duplicate_group_members UNIQUE (group_id, listing_id)
 );
 
--- == indeksy (w tym GIN dla kolumn JSONB) ==
-CREATE INDEX idx_listings_status_last_seen     ON listings (status, last_seen_at);
-CREATE INDEX idx_listings_category_region      ON listings (category, region);
-CREATE INDEX idx_listings_attributes_gin       ON listings USING GIN (attributes);
-CREATE INDEX idx_search_criteria_filters_gin   ON search_criteria USING GIN (filters);
-CREATE INDEX idx_notifications_user_is_read     ON notifications (user_id, is_read);
+-- == indexes (including GIN for JSONB columns) ==
+-- Cleanup/scraper: filtering by status and last_seen_at.
+CREATE INDEX idx_listings_status_last_seen ON listings (status, last_seen_at);
+-- Price stats: same category + region.
+CREATE INDEX idx_listings_category_region ON listings (category, region);
+-- Queries over JSONB attributes (dedup, filters).
+CREATE INDEX idx_listings_attributes_gin ON listings USING GIN (attributes);
+-- Building scraper queries from JSONB filters.
+CREATE INDEX idx_search_criteria_filters_gin ON search_criteria USING GIN (filters);
+-- unread-count polling: per-user, unread.
+CREATE INDEX idx_notifications_user_is_read ON notifications (user_id, is_read);
+-- Price history chart: by listing_id, sorted by recorded_at.
 CREATE INDEX idx_price_history_listing_recorded ON price_history (listing_id, recorded_at);

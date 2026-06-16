@@ -19,7 +19,7 @@ import pl.panzerhund.tracker.user.entity.User;
 import java.time.Instant;
 import java.util.UUID;
 
-/** Zapisane ogłoszenie (per-user). */
+/** Saved listing (per-user). */
 @Entity
 @Table(
         name = "saved_listings",

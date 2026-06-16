@@ -8,6 +8,6 @@ import java.util.UUID;
 
 public interface PriceHistoryRepository extends JpaRepository<PriceHistory, UUID> {
 
-    /** Historia cen ogłoszenia, od najstarszej (pod wykres). */
+    /** Listing price history, oldest first (for the chart). */
     List<PriceHistory> findByListing_IdOrderByRecordedAtAsc(UUID listingId);
 }

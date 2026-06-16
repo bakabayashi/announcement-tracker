@@ -1,9 +1,9 @@
-# Pełne środowisko: postgres + backend + frontend (nginx).
-# Sekrety wyłącznie przez zmienne środowiskowe (patrz .env.example).
-# Dane Postgresa na named volume.
+# Full environment: postgres + backend + frontend (nginx).
+# Secrets only via environment variables (see .env.example).
+# Postgres data on a named volume.
 #
-# UWAGA: Dockerfile'e dla backend/frontend powstaną w osobnym kroku.
-# Do walidacji samej bazy wystarczy: docker compose up -d postgres
+# NOTE: Dockerfiles for backend/frontend will be added in a separate step.
+# To validate just the database: docker compose up -d postgres
 
 services:
   postgres:
@@ -12,7 +12,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tracker}
       POSTGRES_USER: ${POSTGRES_USER:-tracker}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD jest wymagane}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
@@ -34,9 +34,9 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-tracker}
       DB_USERNAME: ${POSTGRES_USER:-tracker}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD jest wymagane}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID jest wymagane}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?GOOGLE_CLIENT_SECRET jest wymagane}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID is required}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?GOOGLE_CLIENT_SECRET is required}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
 

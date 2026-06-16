@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public interface ListingRepository extends JpaRepository<Listing, UUID> {
 
-    /** Pewny match dla deduplikacji: ten sam source + external_id. */
+    /** Exact match for deduplication: same source + external_id. */
     Optional<Listing> findBySourceAndExternalId(Source source, String externalId);
 
     List<Listing> findByStatus(ListingStatus status);

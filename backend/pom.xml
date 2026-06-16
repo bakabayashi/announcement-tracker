@@ -15,7 +15,7 @@
     <artifactId>announcement-tracker</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>announcement-tracker</name>
-    <description>Śledzenie ogłoszeń nieruchomości i samochodów</description>
+    <description>Tracking real-estate and car listings</description>
 
     <properties>
         <java.version>21</java.version>
@@ -28,7 +28,7 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Persistencja -->
+        <!-- Persistence -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -44,13 +44,13 @@
             <artifactId>spring-boot-starter-oauth2-client</artifactId>
         </dependency>
 
-        <!-- Walidacja (Bean Validation) -->
+        <!-- Validation (Bean Validation) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- Migracje bazy -->
+        <!-- Database migrations -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
@@ -60,14 +60,14 @@
             <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
 
-        <!-- Sterownik PostgreSQL (prod/runtime) -->
+        <!-- PostgreSQL driver (prod/runtime) -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
 
-        <!-- H2 in-memory: testy -->
+        <!-- H2 in-memory: tests -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -81,7 +81,7 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Testy -->
+        <!-- Tests -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -95,7 +95,7 @@
     </dependencies>
 
     <profiles>
-        <!-- Profil dev: H2 in-memory dostępne w runtime (mvn spring-boot:run -Pdev) -->
+        <!-- dev profile: H2 in-memory available at runtime (mvn spring-boot:run -Pdev) -->
         <profile>
             <id>dev</id>
             <dependencies>

@@ -1,6 +1,6 @@
 package pl.panzerhund.tracker.notification.entity;
 
-/** Rodzaj powiadomienia. */
+/** Notification type. */
 public enum NotificationType {
     PRICE_DROP,
     NEW_MATCH,

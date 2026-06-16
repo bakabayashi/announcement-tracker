@@ -32,8 +32,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Frontend jeszcze nie istnieje w /frontend — job jest gotowy na przyszłość.
-      # Jeśli katalogu brak, kolejne kroki są pomijane (CI pozostaje zielone).
+      # Guard: run npm ci / ng build only when frontend/ exists, so CI stays green
+      # even if the frontend is absent.
       - name: Detect frontend project
         id: detect
         run: |
@@ -41,7 +41,7 @@ jobs:
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Katalog frontend/ nie istnieje — kroki npm ci / ng build pominięte (job gotowy na przyszłość)."
+            echo "::notice::frontend/ directory not found - npm ci / ng build skipped."
           fi
 
       - name: Set up Node 22

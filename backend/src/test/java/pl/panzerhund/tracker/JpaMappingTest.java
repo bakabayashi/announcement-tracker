@@ -18,8 +18,8 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Weryfikuje runtime mapowań repozytoriów na H2: round-trip JSONB (attributes),
- * asocjacje @ManyToOne oraz wybrane findery. Schema z encji (create-drop).
+ * Verifies repository mapping at runtime on H2: JSONB round-trip (attributes),
+ * @ManyToOne associations and selected finders. Schema generated from entities (create-drop).
  */
 @DataJpaTest
 class JpaMappingTest {
@@ -39,24 +39,24 @@ class JpaMappingTest {
         listing.setSource(Source.OLX);
         listing.setExternalId("ext-1");
         listing.setCategory(Category.PLOT);
-        listing.setTitle("Działka 1000 m2");
+        listing.setTitle("Plot 1000 sqm");
         listing.setUrl("https://olx.pl/1");
         listing.setStatus(ListingStatus.ACTIVE);
         listing.setAttributes(Map.of("area", 1000, "fenced", true));
-        // first_seen_at / last_seen_at NOT ustawiane ręcznie - @CreationTimestamp
+        // first_seen_at / last_seen_at NOT set manually - @CreationTimestamp
         Listing persistedListing = listings.saveAndFlush(listing);
 
         User user = new User();
         user.setGoogleSub("sub-1");
         user.setEmail("tester@panzerhund.pl");
         user.setName("Tester");
-        // created_at NOT ustawiane ręcznie - @CreationTimestamp
+        // created_at NOT set manually - @CreationTimestamp
         User persistedUser = users.saveAndFlush(user);
 
         SavedListing saved = new SavedListing();
         saved.setUser(persistedUser);
         saved.setListing(persistedListing);
-        // saved_at NOT ustawiane ręcznie - @CreationTimestamp
+        // saved_at NOT set manually - @CreationTimestamp
         savedListings.saveAndFlush(saved);
 
         // JSON round-trip
@@ -65,12 +65,12 @@ class JpaMappingTest {
                 .containsEntry("area", 1000)
                 .containsEntry("fenced", true);
 
-        // auto-timestampy (@CreationTimestamp) wypełnione mimo braku ręcznego setowania
+        // auto timestamps (@CreationTimestamp) populated despite no manual setting
         assertThat(reloaded.getFirstSeenAt()).isNotNull();
         assertThat(reloaded.getLastSeenAt()).isNotNull();
         assertThat(persistedUser.getCreatedAt()).isNotNull();
 
-        // findery + asocjacje
+        // finders + associations
         assertThat(listings.findBySourceAndExternalId(Source.OLX, "ext-1")).isPresent();
         assertThat(savedListings.findByUser_IdAndListing_Id(persistedUser.getId(), persistedListing.getId()))
                 .isPresent();

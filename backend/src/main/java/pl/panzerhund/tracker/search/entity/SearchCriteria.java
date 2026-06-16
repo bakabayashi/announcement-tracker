@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/** Kryteria wyszukiwania (per-user). Filtry per kategoria w JSONB. */
+/** Search criteria (per-user). Per-category filters in JSONB. */
 @Entity
 @Table(name = "search_criteria")
 @Getter

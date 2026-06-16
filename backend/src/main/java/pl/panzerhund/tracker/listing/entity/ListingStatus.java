@@ -1,6 +1,6 @@
 package pl.panzerhund.tracker.listing.entity;
 
-/** Stan ogłoszenia w systemie. */
+/** Listing status in the system. */
 public enum ListingStatus {
     ACTIVE,
     INACTIVE,

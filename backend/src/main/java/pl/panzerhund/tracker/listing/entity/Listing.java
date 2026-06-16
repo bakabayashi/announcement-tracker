@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/** Ogłoszenie. GLOBALNE - jedno ogłoszenie = jeden rekord, bez user_id. */
+/** Listing. GLOBAL - one listing = one row, no user_id. */
 @Entity
 @Table(
         name = "listings",

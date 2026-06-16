@@ -1,6 +1,6 @@
 package pl.panzerhund.tracker.listing.entity;
 
-/** Serwis źródłowy ogłoszenia. */
+/** Source service of a listing. */
 public enum Source {
     OLX,
     OTODOM,

@@ -1,6 +1,6 @@
 package pl.panzerhund.tracker.category.entity;
 
-/** Typ ogłoszenia: działka lub samochód. */
+/** Listing category: plot or car. */
 public enum Category {
     PLOT,
     CAR

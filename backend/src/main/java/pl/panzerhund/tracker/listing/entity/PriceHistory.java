@@ -18,7 +18,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-/** Historia cen ogłoszenia. Insert-only. */
+/** Price history of a listing. Insert-only. */
 @Entity
 @Table(name = "price_history")
 @Getter

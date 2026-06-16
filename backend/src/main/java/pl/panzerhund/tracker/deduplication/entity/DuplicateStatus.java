@@ -1,6 +1,6 @@
 package pl.panzerhund.tracker.deduplication.entity;
 
-/** Stan grupy duplikatów. */
+/** Duplicate group status. */
 public enum DuplicateStatus {
     SUGGESTED,
     CONFIRMED,

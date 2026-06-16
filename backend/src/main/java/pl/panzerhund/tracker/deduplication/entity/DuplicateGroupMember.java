@@ -16,7 +16,7 @@ import pl.panzerhund.tracker.listing.entity.Listing;
 
 import java.util.UUID;
 
-/** Członek grupy duplikatów (ogłoszenie należące do grupy). */
+/** Duplicate group member (a listing belonging to the group). */
 @Entity
 @Table(
         name = "duplicate_group_members",
