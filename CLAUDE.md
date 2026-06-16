@@ -191,7 +191,11 @@ Sekrety wyłącznie przez zmienne środowiskowe.
 
 ## Zasady pracy agenta
 - Przed implementacją czegokolwiek większego: opisz plan, czekaj na akceptację
+- Po napisaniu kodu: git add, commit, push
+- NIE uruchamiaj mvn verify ani ng build lokalnie
+- Sprawdź wynik CI: gh run watch && gh run view --log --exit-status
+- Jeśli CI fail: przeczytaj logi, popraw, commit, push ponownie
+- Po naprawieniu CI faila: squash commitów (failujące + fix), push --force-with-lease 
 - Jeden commit = jedna logiczna zmiana
-- Po każdej zmianie: mvn verify lub npm run build — pokaż output
 - Jeśli coś jest niejasne — pytaj, nie zgaduj
 - Nigdy nie modyfikuj istniejących migracji Flyway
