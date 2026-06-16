@@ -28,7 +28,6 @@ public class ListingController {
     private final ListingService service;
     private final PriceHistoryService priceHistoryService;
     private final PriceStatsService priceStatsService;
-    private final ListingMapper mapper;
 
     @GetMapping
     public PageResponse<ListingResponse> list(
@@ -41,17 +40,17 @@ public class ListingController {
             @RequestParam(required = false) BigDecimal priceMax,
             Pageable pageable) {
         ListingFilter filter = new ListingFilter(category, source, status, region, q, priceMin, priceMax);
-        return PageResponse.of(service.search(filter, pageable).map(mapper::toResponse));
+        return PageResponse.of(service.search(filter, pageable).map(ListingMapper::toResponse));
     }
 
     @GetMapping("/{id}")
     public ListingResponse get(@PathVariable UUID id) {
-        return mapper.toResponse(service.getById(id));
+        return ListingMapper.toResponse(service.getById(id));
     }
 
     @GetMapping("/{id}/price-history")
     public List<PriceHistoryResponse> priceHistory(@PathVariable UUID id) {
-        return priceHistoryService.forListing(id).stream().map(mapper::toResponse).toList();
+        return priceHistoryService.forListing(id).stream().map(ListingMapper::toResponse).toList();
     }
 
     @GetMapping("/{id}/price-stats")

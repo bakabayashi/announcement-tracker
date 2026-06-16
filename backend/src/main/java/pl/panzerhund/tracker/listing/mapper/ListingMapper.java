@@ -1,15 +1,16 @@
 package pl.panzerhund.tracker.listing.mapper;
 
-import org.springframework.stereotype.Component;
 import pl.panzerhund.tracker.listing.dto.ListingResponse;
 import pl.panzerhund.tracker.listing.dto.PriceHistoryResponse;
 import pl.panzerhund.tracker.listing.entity.Listing;
 import pl.panzerhund.tracker.listing.entity.PriceHistory;
 
-@Component
-public class ListingMapper {
+public final class ListingMapper {
 
-    public ListingResponse toResponse(Listing listing) {
+    private ListingMapper() {
+    }
+
+    public static ListingResponse toResponse(Listing listing) {
         return new ListingResponse(
                 listing.getId(),
                 listing.getSource(),
@@ -30,7 +31,7 @@ public class ListingMapper {
                 listing.getLastSeenAt());
     }
 
-    public PriceHistoryResponse toResponse(PriceHistory priceHistory) {
+    public static PriceHistoryResponse toResponse(PriceHistory priceHistory) {
         return new PriceHistoryResponse(
                 priceHistory.getPrice(),
                 priceHistory.getCurrency(),

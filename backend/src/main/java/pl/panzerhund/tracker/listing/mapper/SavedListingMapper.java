@@ -1,20 +1,17 @@
 package pl.panzerhund.tracker.listing.mapper;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 import pl.panzerhund.tracker.listing.dto.SavedListingResponse;
 import pl.panzerhund.tracker.listing.entity.SavedListing;
 
-@Component
-@RequiredArgsConstructor
-public class SavedListingMapper {
+public final class SavedListingMapper {
 
-    private final ListingMapper listingMapper;
+    private SavedListingMapper() {
+    }
 
-    public SavedListingResponse toResponse(SavedListing savedListing) {
+    public static SavedListingResponse toResponse(SavedListing savedListing) {
         return new SavedListingResponse(
                 savedListing.getId(),
-                listingMapper.toResponse(savedListing.getListing()),
+                ListingMapper.toResponse(savedListing.getListing()),
                 savedListing.getNotes(),
                 savedListing.getSavedAt());
     }

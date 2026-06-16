@@ -28,25 +28,24 @@ import java.util.UUID;
 public class SavedListingController {
 
     private final SavedListingService service;
-    private final SavedListingMapper mapper;
 
     @GetMapping
     public List<SavedListingResponse> list(@AuthenticationPrincipal AppUserPrincipal principal) {
-        return service.listForUser(principal.getUserId()).stream().map(mapper::toResponse).toList();
+        return service.listForUser(principal.getUserId()).stream().map(SavedListingMapper::toResponse).toList();
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public SavedListingResponse save(@AuthenticationPrincipal AppUserPrincipal principal,
                                      @Valid @RequestBody SaveListingRequest request) {
-        return mapper.toResponse(service.save(principal.getUserId(), request.listingId(), request.notes()));
+        return SavedListingMapper.toResponse(service.save(principal.getUserId(), request.listingId(), request.notes()));
     }
 
     @PatchMapping("/{id}")
     public SavedListingResponse update(@AuthenticationPrincipal AppUserPrincipal principal,
                                        @PathVariable UUID id,
                                        @Valid @RequestBody UpdateSavedListingRequest request) {
-        return mapper.toResponse(service.updateNotes(principal.getUserId(), id, request.notes()));
+        return SavedListingMapper.toResponse(service.updateNotes(principal.getUserId(), id, request.notes()));
     }
 
     @DeleteMapping("/{id}")
