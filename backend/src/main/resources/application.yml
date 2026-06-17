@@ -19,6 +19,8 @@ spring:
 app:
   security:
     allowed-emails: []
+    # Emails granted the ADMIN role on login (e.g. duplicate merge); everyone else is USER.
+    admin-emails: []
   scraper:
     max-pages-per-criteria: 5
     delay-min-seconds: 3

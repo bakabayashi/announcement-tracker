@@ -4,12 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import pl.panzerhund.tracker.user.AppUserPrincipal;
 import pl.panzerhund.tracker.user.UserRepository;
+import pl.panzerhund.tracker.user.entity.Role;
 import pl.panzerhund.tracker.user.entity.User;
 
 import java.util.List;
@@ -51,7 +53,7 @@ public class WhitelistOAuth2UserService implements OAuth2UserService<OAuth2UserR
                 entity.getEmail(),
                 entity.getName(),
                 entity.getPictureUrl(),
-                user.getAuthorities(),
+                List.of(new SimpleGrantedAuthority("ROLE_" + entity.getRole().name())),
                 user.getAttributes(),
                 "sub");
     }
@@ -75,6 +77,14 @@ public class WhitelistOAuth2UserService implements OAuth2UserService<OAuth2UserR
         entity.setEmail(user.getAttribute("email"));
         entity.setName(user.getAttribute("name"));
         entity.setPictureUrl(user.getAttribute("picture"));
+        entity.setRole(resolveRole(user.getAttribute("email"))); // refresh role on every login
         return users.save(entity);
+    }
+
+    private Role resolveRole(String email) {
+        List<String> admins = properties.getAdminEmails();
+        boolean isAdmin = email != null && admins != null
+                && admins.stream().anyMatch(email::equalsIgnoreCase);
+        return isAdmin ? Role.ADMIN : Role.USER;
     }
 }

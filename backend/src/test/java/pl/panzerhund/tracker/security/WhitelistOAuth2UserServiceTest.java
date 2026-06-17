@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import pl.panzerhund.tracker.user.AppUserPrincipal;
 import pl.panzerhund.tracker.user.UserRepository;
+import pl.panzerhund.tracker.user.entity.Role;
 import pl.panzerhund.tracker.user.entity.User;
 
 import java.util.List;
@@ -118,5 +119,49 @@ class WhitelistOAuth2UserServiceTest {
         assertThat(principal.getEmail()).isEqualTo("new@example.com");
         assertThat(principal.getFullName()).isEqualTo("Jan Kowalski");
         assertThat(principal.getName()).isEqualTo("sub-123"); // OAuth2 name attribute = sub
+    }
+
+    @Test
+    void adminEmailGetsAdminRoleAndAuthority() {
+        properties.setAdminEmails(List.of("Boss@Panzerhund.PL"));
+        googleReturns("boss@panzerhund.pl");
+
+        OAuth2User result = service.loadUser(null);
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(users).save(captor.capture());
+        assertThat(captor.getValue().getRole()).isEqualTo(Role.ADMIN);
+        assertThat(result.getAuthorities())
+                .extracting("authority")
+                .containsExactly("ROLE_ADMIN");
+    }
+
+    @Test
+    void nonAdminEmailGetsUserRole() {
+        properties.setAdminEmails(List.of("boss@panzerhund.pl"));
+        googleReturns("regular@example.com");
+
+        OAuth2User result = service.loadUser(null);
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(users).save(captor.capture());
+        assertThat(captor.getValue().getRole()).isEqualTo(Role.USER);
+        assertThat(result.getAuthorities())
+                .extracting("authority")
+                .containsExactly("ROLE_USER");
+    }
+
+    @Test
+    void roleRefreshedToUserWhenRemovedFromAdminList() {
+        // existing admin user logs in while no longer on the admin list -> demoted to USER
+        User existing = new User();
+        existing.setRole(Role.ADMIN);
+        when(users.findByGoogleSub(any())).thenReturn(Optional.of(existing));
+        properties.setAdminEmails(List.of());
+        googleReturns("former-admin@example.com");
+
+        service.loadUser(null);
+
+        assertThat(existing.getRole()).isEqualTo(Role.USER);
     }
 }
