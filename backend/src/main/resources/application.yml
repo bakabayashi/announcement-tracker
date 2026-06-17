@@ -52,11 +52,14 @@ app:
       api-version: "2.0"
       page-size: 50
     # HTTP+JSON sources over an assumed contract; disabled until reconciled with the live API.
+    # Otodom: Next.js HTML + __NEXT_DATA__ (no REST API); bot-protected, needs a browser UA.
     otodom:
       enabled: ${OTODOM_ENABLED:false}
       base-url: https://www.otodom.pl
-      search-path: /api/listings
-      page-size: 40
+      page-size: 72
+      transaction: sprzedaz
+      property-type: dzialka
+      location: cala-polska
     otomoto:
       enabled: ${OTOMOTO_ENABLED:false}
       base-url: https://www.otomoto.pl
