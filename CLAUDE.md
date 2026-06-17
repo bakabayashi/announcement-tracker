@@ -232,10 +232,9 @@ Sekrety wyłącznie przez zmienne środowiskowe.
 ## Zasady pracy agenta
 - Przed implementacją czegokolwiek większego: opisz plan, czekaj na akceptację
 - Commituj lokalnie bez pytania (prefiks `[Claude]` w temacie); pushuj wyłącznie za zgodą
-- Backend idzie przez pull requesty:
-  - po skończonej logicznej całości PYTAJ „chcesz PR?" — bez tej zgody nie pushuj backendu
-  - na „tak": branch (nie commituj backendu prosto na `main`), push brancha, `gh pr create`
-  - po informacji od użytkownika, że zreviewował: nanieś fixy albo zmerguj PR (nie merguj sam bez zgody)
+- Backend: po skończonej logicznej całości PYTAJ „chcesz PR?" — bez tego pytania nie pushuj backendu
+  - na „tak": branch, push brancha, `gh pr create`; po review użytkownika nanieś fixy albo zmerguj (nie merguj sam bez zgody)
+  - na „nie": po staremu — push prosto na `main` + obserwacja CI (NIE zostawiaj commita na branchu)
 - NIE uruchamiaj mvn verify ani ng build lokalnie (mimo dostępnego Dockera weryfikujemy przez CI)
 - Po pushu sprawdź wynik CI: gh run watch && gh run view --log --exit-status
 - Jeśli CI fail: przeczytaj logi, popraw, commit, push ponownie na branchu PR-a
