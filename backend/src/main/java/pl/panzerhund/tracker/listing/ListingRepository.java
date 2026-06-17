@@ -2,6 +2,7 @@ package pl.panzerhund.tracker.listing;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import pl.panzerhund.tracker.category.entity.Category;
@@ -50,4 +51,24 @@ public interface ListingRepository extends JpaRepository<Listing, UUID>, JpaSpec
     List<BigDecimal> findPricesByCategoryAndRegionSince(@Param("category") Category category,
                                                         @Param("region") String region,
                                                         @Param("since") Instant since);
+
+    /** Cleanup: flip stale listings of one status to another (e.g. ACTIVE -> INACTIVE). Returns rows updated. */
+    @Modifying
+    @Query("update Listing l set l.status = :to where l.status = :from and l.lastSeenAt < :threshold")
+    int updateStatusForStale(@Param("from") ListingStatus from,
+                             @Param("to") ListingStatus to,
+                             @Param("threshold") Instant threshold);
+
+    /**
+     * Cleanup: delete listings of a status older than the threshold, skipping any a user saved.
+     * DB-level ON DELETE CASCADE removes their price history, notifications and duplicate-group rows.
+     */
+    @Modifying
+    @Query("""
+            delete from Listing l
+            where l.status = :status and l.lastSeenAt < :threshold
+              and not exists (select 1 from SavedListing s where s.listing = l)
+            """)
+    int deleteUnsavedByStatusOlderThan(@Param("status") ListingStatus status,
+                                       @Param("threshold") Instant threshold);
 }
