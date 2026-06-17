@@ -18,4 +18,8 @@ public interface SavedListingRepository extends JpaRepository<SavedListing, UUID
 
     @EntityGraph(attributePaths = "listing")
     Optional<SavedListing> findByIdAndUser_Id(UUID id, UUID userId);
+
+    /** Everyone who saved a given listing (repost notifications, re-pointing on merge). */
+    @EntityGraph(attributePaths = "user")
+    List<SavedListing> findByListing_Id(UUID listingId);
 }

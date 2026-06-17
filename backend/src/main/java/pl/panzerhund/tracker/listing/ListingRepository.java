@@ -22,6 +22,25 @@ public interface ListingRepository extends JpaRepository<Listing, UUID>, JpaSpec
 
     List<Listing> findByStatus(ListingStatus status);
 
+    /** Listings of a status seen at or after the given instant (deduplication scans freshly-active ones). */
+    List<Listing> findByStatusAndLastSeenAtGreaterThanEqual(ListingStatus status, Instant since);
+
+    /**
+     * Duplicate candidates within {@code radiusMeters} of a point (PostGIS {@code ST_DWithin} on the
+     * GIST-indexed geography column): same category, georeferenced, not merged, excluding the subject.
+     */
+    @Query(value = """
+            select * from listings l
+            where l.category = :category and l.status <> 'MERGED' and l.id <> :excludeId
+              and l.geo is not null
+              and ST_DWithin(l.geo, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :radiusMeters)
+            """, nativeQuery = true)
+    List<Listing> findGeoCandidates(@Param("category") String category,
+                                    @Param("excludeId") UUID excludeId,
+                                    @Param("lng") double lng,
+                                    @Param("lat") double lat,
+                                    @Param("radiusMeters") double radiusMeters);
+
     /** Prices of similar listings (same category + region, seen within the window), for stats. */
     @Query("""
             select l.price from Listing l
