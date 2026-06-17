@@ -60,4 +60,10 @@ class SecurityRulesTest extends AbstractIntegrationTest {
         mvc.perform(post("/api/v1/ping").with(oauth2Login()).with(csrf()))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void openApiDocsArePublic() throws Exception {
+        // permitAll on /v3/api-docs/** -> served without authentication (and springdoc is wired)
+        mvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
+    }
 }

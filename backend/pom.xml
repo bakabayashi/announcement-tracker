@@ -50,6 +50,13 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- OpenAPI / Swagger UI (springdoc; version not managed by the Boot BOM) -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.7.0</version>
+        </dependency>
+
         <!-- Database migrations -->
         <dependency>
             <groupId>org.flywaydb</groupId>
