@@ -75,3 +75,7 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+# Behind the nginx reverse proxy: honour X-Forwarded-* so OAuth2 redirect URIs
+# (Google callback) use the external host/scheme, not the internal container address.
+server:
+  forward-headers-strategy: framework
