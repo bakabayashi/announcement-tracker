@@ -35,7 +35,7 @@ Każdy moduł: controller / service / repository / dto / entity / mapper
 ## Auth
 Spring Security OAuth2 Login — Google jako jedyny provider.
 
-Encja `User`: id (UUID), google_sub, email, name, picture_url, created_at.
+Encja `User`: id (UUID), google_sub, email, name, picture_url, role, created_at.
 Wszystkie encje per-user (SavedListing, SearchCriteria, Notification) mają `user_id` FK.
 
 Whitelist:
@@ -43,6 +43,12 @@ Whitelist:
 - Gdy lista pusta → wszyscy zalogowani Google przechodzą (dev mode)
 - Gdy niepusta → blokujesz każdego spoza listy (403)
 - Logika w `OAuth2UserService` dekoratorze w `SecurityConfig`
+
+Role:
+- `Role`: USER (domyślna) / ADMIN.
+- Properta: `app.security.admin-emails` (lista stringów). Email z listy → `OAuth2UserService` ustawia rolę ADMIN przy logowaniu, reszta USER. Rola persystowana na `User` i odświeżana przy każdym logowaniu.
+- Principal (`OAuth2User`) niesie authority `ROLE_USER` / `ROLE_ADMIN` → endpointy zabezpieczamy `@PreAuthorize("hasRole('ADMIN')")`.
+- ADMIN dostaje uprawnienia tam, gdzie decyzja jest globalna (scalanie duplikatów).
 
 ```yaml
 spring:
@@ -58,6 +64,7 @@ spring:
 app:
   security:
     allowed-emails: []  # puste = dev mode, wszyscy przechodzą
+    admin-emails: []    # emaile z rolą ADMIN (m.in. scalanie duplikatów)
 ```
 
 ## Źródła danych
@@ -119,7 +126,7 @@ app:
 ## Model danych
 
 **User**
-- id (UUID), google_sub, email, name, picture_url, created_at
+- id (UUID), google_sub, email, name, picture_url, role (USER/ADMIN), created_at
 
 **Listing**
 - source (OLX/OTODOM/OTOMOTO/ALLEGRO), external_id, category (PLOT/CAR)
@@ -127,7 +134,8 @@ app:
 - location: city, region, lat, lng (nullable)
 - attributes: JSONB
 - status: ACTIVE / INACTIVE / MERGED
-- first_seen_at, last_seen_at, user_id
+- first_seen_at, last_seen_at
+- GLOBALNY: jeden wiersz = jedno ogłoszenie współdzielone przez userów (bez user_id)
 
 **PriceHistory** — insert-only, nigdy nie edytujemy
 - listing_id, price, currency, recorded_at
@@ -141,16 +149,44 @@ app:
 **Notification**
 - user_id, listing_id, type (PRICE_DROP/NEW_MATCH/REPOSTED), is_read, created_at
 
-**DuplicateGroup**
-- primary_listing_id, status (SUGGESTED/CONFIRMED/REJECTED)
+**DuplicateGroup** — GLOBALNY (bez user_id); decyzje podejmuje ADMIN
+- primary_listing_id, status (SUGGESTED/CONFIRMED/REJECTED), created_at
+
+**DuplicateGroupMember**
+- group_id, listing_id (kandydat-duplikat wskazujący na primary)
 
 ## Deduplication
+GLOBALNY (nie per-user). Sugestie widoczne dla wszystkich zalogowanych; scalanie tylko dla ADMIN
+(decyzja jest globalna, bo `Listing` jest współdzielony).
+
 Dwa poziomy:
-1. Pewny match: ten sam source + external_id → update, nie insert
+1. Pewny match: ten sam source + external_id → update, nie insert (robi `ListingUpserter` w scraperze).
 2. Prawdopodobny duplikat (sugestia):
     - ta sama kategoria + lokalizacja ±1km + powierzchnia ±5% + cena ±15%
     - różne source LUB nowy external_id na tym samym source
-      → `DuplicateGroup` ze statusem SUGGESTED, user akceptuje/odrzuca w UI
+      → `DuplicateGroup` ze statusem SUGGESTED.
+
+### Kiedy
+Osobny krok PO zakończeniu scrape run (NIE w transakcji scrape). Skanuje świeżo dodane/zmienione
+ACTIVE listingi i szuka kandydatów. Nie tworzy duplikatu istniejącej grupy ani sugestii dla pary już REJECTED.
+
+### Geo ±1km
+Bez PostGIS: prefiltr bounding-box po lat/lng, potem dokładny dystans haversine.
+Listingi bez lat/lng pomijane w kryterium geo.
+
+### Decyzja (ADMIN)
+- CONFIRM → członkowie grupy dostają `Listing.status = MERGED` (globalnie, znikają z list), primary zostaje.
+  SavedListing wskazujące na zmergowane → przepinane na primary.
+- REJECT → status REJECTED, para nie jest ponownie sugerowana.
+
+### API
+- `GET  /api/v1/duplicates`            — grupy SUGGESTED z członkami (zalogowany)
+- `POST /api/v1/duplicates/{id}/confirm` — scal (ADMIN)
+- `POST /api/v1/duplicates/{id}/reject`  — odrzuć (ADMIN)
+
+### Repost → REPOSTED
+Nowy listing (nowy external_id, ten sam source) silnie pasujący do INACTIVE/starszego traktujemy jak repost
+→ powiadomienie REPOSTED dla userów, którzy mają oryginał w SavedListing.
 
 ## Powiadomienia
 Tylko bell w UI, bez email/push.
@@ -158,6 +194,7 @@ Tylko bell w UI, bez email/push.
 - Live update: SSE `GET /api/v1/notifications/stream` (text/event-stream) — serwer pushuje przy nowym powiadomieniu
 - Panel: lista z is_read, oznaczanie jako przeczytane
 - Typy: PRICE_DROP, NEW_MATCH, REPOSTED
+- Producenci: PRICE_DROP / NEW_MATCH ze scrapera (`ScrapeNotificationProducer`); REPOSTED z modułu deduplication przy wykryciu repostu
 
 ## Wykresy
 PrimeNG `p-chart` (Chart.js) — NIE Grafana.
