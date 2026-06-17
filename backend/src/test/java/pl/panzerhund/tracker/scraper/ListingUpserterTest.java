@@ -16,6 +16,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -45,6 +46,7 @@ class ListingUpserterTest {
 
     private Listing stored(String externalId, BigDecimal price, Instant lastSeenAt) {
         Listing l = new Listing();
+        l.setId(UUID.randomUUID());
         l.setSource(Source.OLX);
         l.setExternalId(externalId);
         l.setCategory(Category.PLOT);
@@ -59,14 +61,20 @@ class ListingUpserterTest {
 
     @Test
     void insertsNewListingAndRecordsInitialPrice() {
+        UUID assignedId = UUID.randomUUID();
         when(listings.findBySourceAndExternalId(Source.OLX, "a")).thenReturn(Optional.empty());
+        when(listings.save(any(Listing.class))).thenAnswer(inv -> {
+            Listing saved = inv.getArgument(0);
+            saved.setId(assignedId);  // JPA assigns the id on insert
+            return saved;
+        });
 
         UpsertResult result = upserter.upsert(Source.OLX, scraped("a", new BigDecimal("100000")));
 
         assertThat(result.outcome()).isEqualTo(UpsertResult.Outcome.CREATED);
+        assertThat(result.listingId()).isEqualTo(assignedId);
         assertThat(result.priceDropped()).isFalse();
         assertThat(result.previousLastSeenAt()).isNull();
-        verify(listings).save(any(Listing.class));
         verify(priceHistory).save(any(PriceHistory.class));
     }
 
@@ -79,6 +87,7 @@ class ListingUpserterTest {
         UpsertResult result = upserter.upsert(Source.OLX, scraped("a", new BigDecimal("80000")));
 
         assertThat(result.outcome()).isEqualTo(UpsertResult.Outcome.UPDATED);
+        assertThat(result.listingId()).isEqualTo(existing.getId());
         assertThat(result.priceDropped()).isTrue();
         assertThat(result.previousLastSeenAt()).isEqualTo(twoDaysAgo);
         assertThat(existing.getPrice()).isEqualByComparingTo("80000");

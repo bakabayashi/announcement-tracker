@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.panzerhund.tracker.notification.ScrapeNotificationProducer;
 import pl.panzerhund.tracker.scraper.config.ScraperProperties;
 import pl.panzerhund.tracker.scraper.source.ListingSource;
 import pl.panzerhund.tracker.scraper.source.ScrapedListing;
@@ -14,13 +15,15 @@ import pl.panzerhund.tracker.search.entity.SearchCriteria;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Orchestrates criteria-driven, incremental scraping: for each {@link SearchCriteria} it runs every
  * registered {@link ListingSource}, paginating newest-first and delegating persistence to {@link ListingUpserter}.
  * Pagination stops early once it reaches a listing already seen within the last 24h.
  * <p>
- * Notification producers (PRICE_DROP / NEW_MATCH) are intentionally not wired here yet.
+ * Each upsert is translated into notifications for the criteria's owner via
+ * {@link ScrapeNotificationProducer}: a newly inserted listing yields NEW_MATCH, a price drop yields PRICE_DROP.
  */
 @Service
 @RequiredArgsConstructor
@@ -34,6 +37,7 @@ public class ScraperService {
     private final List<ListingSource> sources;
     private final SearchCriteriaRepository searchCriteriaRepository;
     private final ListingUpserter upserter;
+    private final ScrapeNotificationProducer notificationProducer;
     private final ScraperProperties properties;
 
     /** Scrape every stored criteria across all sources. Returns the aggregate summary. */
@@ -58,6 +62,7 @@ public class ScraperService {
 
     private ScrapeSummary scrapeSource(ListingSource source, SearchCriteria criteria) {
         Instant knownThreshold = Instant.now().minus(KNOWN_WINDOW);
+        UUID userId = criteria.getUser().getId();
         ScrapeSummary summary = ScrapeSummary.empty();
 
         for (int page = 0; page < properties.getMaxPagesPerCriteria(); page++) {
@@ -70,6 +75,7 @@ public class ScraperService {
             for (ScrapedListing item : items) {
                 UpsertResult result = upserter.upsert(source.source(), item);
                 summary = summary.plus(result);
+                produceNotifications(userId, result);
 
                 // Newest-first: once we hit a recently-seen listing, everything after is already known.
                 if (result.wasSeenAfter(knownThreshold)) {
@@ -87,6 +93,16 @@ public class ScraperService {
                 source.source(), criteria.getName(),
                 summary.created(), summary.updated(), summary.priceDrops());
         return summary;
+    }
+
+    /** Emit the notifications a single upsert warrants for the criteria's owner. */
+    private void produceNotifications(UUID userId, UpsertResult result) {
+        if (result.outcome() == UpsertResult.Outcome.CREATED) {
+            notificationProducer.notifyNewMatch(userId, result.listingId());
+        }
+        if (result.priceDropped()) {
+            notificationProducer.notifyPriceDrop(userId, result.listingId());
+        }
     }
 
     /** Aggregate counts produced by a scrape run. */

@@ -41,7 +41,7 @@ public class ListingUpserter {
         if (item.price() != null) {
             recordPrice(listing, item.price(), item.currency());
         }
-        return UpsertResult.created();
+        return UpsertResult.created(listing.getId());
     }
 
     private UpsertResult update(Listing listing, ScrapedListing item) {
@@ -53,7 +53,7 @@ public class ListingUpserter {
         listing.setLastSeenAt(Instant.now());      // @CreationTimestamp only stamps on insert
 
         boolean priceDropped = recordPriceIfChanged(listing, previousPrice, item);
-        return UpsertResult.updated(priceDropped, previousLastSeen);
+        return UpsertResult.updated(listing.getId(), priceDropped, previousLastSeen);
     }
 
     /**
