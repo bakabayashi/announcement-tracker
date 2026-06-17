@@ -6,6 +6,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
+import pl.panzerhund.tracker.AbstractIntegrationTest;
 
 import java.util.List;
 import java.util.Map;
@@ -18,7 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class MeEndpointTest {
+class MeEndpointTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mvc;

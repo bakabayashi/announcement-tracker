@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
+import pl.panzerhund.tracker.AbstractIntegrationTest;
 import pl.panzerhund.tracker.category.entity.Category;
 import pl.panzerhund.tracker.listing.entity.Listing;
 import pl.panzerhund.tracker.listing.entity.ListingStatus;
@@ -21,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class ListingControllerTest {
+class ListingControllerTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mvc;

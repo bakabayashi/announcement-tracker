@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
+import pl.panzerhund.tracker.AbstractIntegrationTest;
 import pl.panzerhund.tracker.category.entity.Category;
 import pl.panzerhund.tracker.listing.dto.SaveListingRequest;
 import pl.panzerhund.tracker.listing.dto.UpdateSavedListingRequest;
@@ -34,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class SavedListingFlowTest {
+class SavedListingFlowTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mvc;

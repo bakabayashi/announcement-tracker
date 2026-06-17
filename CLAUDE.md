@@ -6,7 +6,7 @@ Multi-user, self-hosted na Docker.
 ## Stack
 - Backend: Java 21, Spring Boot 3.x, Maven
 - Frontend: Angular 20, standalone components, PrimeNG
-- Baza: PostgreSQL 16 (JSONB dla atrybutów per kategoria)
+- Baza: PostgreSQL 16 + PostGIS (JSONB dla atrybutów per kategoria; geografia dla dedup)
 - Migracje: Flyway
 - Hosting: Docker Compose
 
@@ -171,8 +171,9 @@ Osobny krok PO zakończeniu scrape run (NIE w transakcji scrape). Skanuje świe�
 ACTIVE listingi i szuka kandydatów. Nie tworzy duplikatu istniejącej grupy ani sugestii dla pary już REJECTED.
 
 ### Geo ±1km
-Bez PostGIS: prefiltr bounding-box po lat/lng, potem dokładny dystans haversine.
-Listingi bez lat/lng pomijane w kryterium geo.
+PostGIS: kolumna `geo geography(Point,4326)` (generowana z lng/lat) + indeks GIST.
+Kandydaci przez `ST_DWithin(geo, ST_MakePoint(lng,lat)::geography, 1000)` w natywnym zapytaniu.
+Listingi bez lat/lng (geo IS NULL) pomijane w kryterium geo.
 
 ### Decyzja (ADMIN)
 - CONFIRM → członkowie grupy dostają `Listing.status = MERGED` (globalnie, znikają z list), primary zostaje.
@@ -215,6 +216,7 @@ Wykres historii ceny (standalone `PriceHistoryChartComponent`):
 - Bean Validation na Request DTO
 - @ControllerAdvice GlobalExceptionHandler
 - Testy: JUnit 5 + Mockito, suffix Test
+- Testy integracyjne (`@SpringBootTest`/`@DataJpaTest`) na realnym Postgresie (PostGIS) przez Testcontainers — `extends AbstractIntegrationTest`. Brak H2; Flyway puszcza migracje na kontenerze.
 
 ## Konwencje frontendu
 - Standalone components, brak NgModules

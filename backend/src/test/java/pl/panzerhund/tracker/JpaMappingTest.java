@@ -2,6 +2,7 @@ package pl.panzerhund.tracker;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import pl.panzerhund.tracker.category.entity.Category;
 import pl.panzerhund.tracker.listing.ListingRepository;
@@ -14,15 +15,17 @@ import pl.panzerhund.tracker.user.UserRepository;
 import pl.panzerhund.tracker.user.entity.User;
 
 import java.util.Map;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Verifies repository mapping at runtime on H2: JSONB round-trip (attributes),
- * @ManyToOne associations and selected finders. Schema generated from entities (create-drop).
+ * Verifies repository mapping against a real PostgreSQL (Testcontainers): JSONB round-trip
+ * (attributes), @ManyToOne associations and selected finders. Schema applied by Flyway.
  */
 @DataJpaTest
-class JpaMappingTest {
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+class JpaMappingTest extends AbstractIntegrationTest {
 
     @Autowired
     private UserRepository users;
@@ -35,9 +38,14 @@ class JpaMappingTest {
 
     @Test
     void persistsAndReadsJsonAttributesAndAssociations() {
+        // Unique identifiers: integration tests share one Testcontainers database, so fixed
+        // keys would clash with users/listings other tests commit.
+        String unique = UUID.randomUUID().toString();
+        String externalId = "ext-" + unique;
+
         Listing listing = new Listing();
         listing.setSource(Source.OLX);
-        listing.setExternalId("ext-1");
+        listing.setExternalId(externalId);
         listing.setCategory(Category.PLOT);
         listing.setTitle("Plot 1000 sqm");
         listing.setUrl("https://olx.pl/1");
@@ -47,8 +55,8 @@ class JpaMappingTest {
         Listing persistedListing = listings.saveAndFlush(listing);
 
         User user = new User();
-        user.setGoogleSub("sub-1");
-        user.setEmail("tester@panzerhund.pl");
+        user.setGoogleSub("sub-" + unique);
+        user.setEmail(unique + "@panzerhund.pl");
         user.setName("Tester");
         // created_at NOT set manually - @CreationTimestamp
         User persistedUser = users.saveAndFlush(user);
@@ -71,7 +79,7 @@ class JpaMappingTest {
         assertThat(persistedUser.getCreatedAt()).isNotNull();
 
         // finders + associations
-        assertThat(listings.findBySourceAndExternalId(Source.OLX, "ext-1")).isPresent();
+        assertThat(listings.findBySourceAndExternalId(Source.OLX, externalId)).isPresent();
         assertThat(savedListings.findByUser_IdAndListing_Id(persistedUser.getId(), persistedListing.getId()))
                 .isPresent();
     }

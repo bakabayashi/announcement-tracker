@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
+import pl.panzerhund.tracker.AbstractIntegrationTest;
 import pl.panzerhund.tracker.category.entity.Category;
 import pl.panzerhund.tracker.listing.ListingRepository;
 import pl.panzerhund.tracker.listing.entity.Listing;
@@ -32,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class NotificationFlowTest {
+class NotificationFlowTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mvc;

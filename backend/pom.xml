@@ -67,13 +67,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- H2 in-memory: tests -->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>test</scope>
-        </dependency>
-
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -100,21 +93,24 @@
             <version>3.9.2</version>
             <scope>test</scope>
         </dependency>
-    </dependencies>
 
-    <profiles>
-        <!-- dev profile: H2 in-memory available at runtime (mvn spring-boot:run -Pdev) -->
-        <profile>
-            <id>dev</id>
-            <dependencies>
-                <dependency>
-                    <groupId>com.h2database</groupId>
-                    <artifactId>h2</artifactId>
-                    <scope>runtime</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
+        <!-- Integration tests run against a real PostgreSQL (PostGIS) via Testcontainers -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>

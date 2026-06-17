@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
+import pl.panzerhund.tracker.AbstractIntegrationTest;
 import pl.panzerhund.tracker.category.entity.Category;
 import pl.panzerhund.tracker.search.dto.SearchCriteriaRequest;
 import pl.panzerhund.tracker.user.AppUserPrincipal;
@@ -30,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class SearchCriteriaFlowTest {
+class SearchCriteriaFlowTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mvc;
