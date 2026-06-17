@@ -14,7 +14,6 @@ import pl.panzerhund.tracker.scraper.config.OtodomProperties;
 import pl.panzerhund.tracker.scraper.config.ScraperProperties;
 import pl.panzerhund.tracker.search.entity.SearchCriteria;
 
-import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -77,7 +76,7 @@ public class OtodomScraper implements ListingSource {
                 .retrieve()
                 .body(String.class);
 
-        String nextData = extractNextData(html);
+        String nextData = NextData.extract(html);
         if (nextData == null) {
             log.warn("Otodom: __NEXT_DATA__ not found in response (page {})", page);
             return List.of();
@@ -105,10 +104,10 @@ public class OtodomScraper implements ListingSource {
 
     private URI buildUri(UriBuilder uriBuilder, SearchCriteria criteria, int page) {
         Map<String, Object> filters = criteria.getFilters() != null ? criteria.getFilters() : Map.of();
-        String transaction = str(filters.get("transaction"), properties.getTransaction());
-        String propertyType = str(filters.get("propertyType"), properties.getPropertyType());
+        String transaction = NextData.str(filters.get("transaction"), properties.getTransaction());
+        String propertyType = NextData.str(filters.get("propertyType"), properties.getPropertyType());
         // Segments are slugs (e.g. cala-polska); kept raw so multi-segment locations stay path separators.
-        String location = str(filters.get("location"), properties.getLocation());
+        String location = NextData.str(filters.get("location"), properties.getLocation());
 
         uriBuilder.path("/pl/wyniki/" + transaction + "/" + propertyType + "/" + location)
                 .queryParam("page", page + 1) // Otodom pages are 1-based
@@ -128,46 +127,31 @@ public class OtodomScraper implements ListingSource {
             return null; // skip non-listing entries (e.g. section markers)
         }
         JsonNode location = item.path("location");
-        String slug = text(item, "slug");
+        String slug = NextData.text(item, "slug");
         return new ScrapedListing(
                 id.asText(),
                 criteria.getCategory(),
-                text(item, "title"),
+                NextData.text(item, "title"),
                 null, // search items carry no full description
-                dec(item, "totalPrice", "value"),
-                text(item, "totalPrice", "currency"),
+                NextData.dec(item, "totalPrice", "value"),
+                NextData.text(item, "totalPrice", "currency"),
                 slug != null ? properties.getBaseUrl() + "/pl/oferta/" + slug : properties.getBaseUrl(),
-                firstNonNull(text(location, "address", "city", "name"), text(location, "address", "city", "code")),
-                firstNonNull(text(location, "address", "province", "name"), text(location, "address", "province", "code")),
-                dbl(location, "coordinates", "latitude"),
-                dbl(location, "coordinates", "longitude"),
+                firstNonNull(NextData.text(location, "address", "city", "name"),
+                        NextData.text(location, "address", "city", "code")),
+                firstNonNull(NextData.text(location, "address", "province", "name"),
+                        NextData.text(location, "address", "province", "code")),
+                NextData.dbl(location, "coordinates", "latitude"),
+                NextData.dbl(location, "coordinates", "longitude"),
                 buildAttributes(item));
     }
 
     private static Map<String, Object> buildAttributes(JsonNode item) {
         Map<String, Object> attributes = new HashMap<>();
-        String area = text(item, "areaInSquareMeters");
+        String area = NextData.text(item, "areaInSquareMeters");
         if (area != null) {
             attributes.put("area", area);
         }
         return attributes;
-    }
-
-    /** Extracts the JSON body of the {@code __NEXT_DATA__} script tag from the HTML. */
-    static String extractNextData(String html) {
-        if (html == null) {
-            return null;
-        }
-        int marker = html.indexOf("__NEXT_DATA__");
-        if (marker < 0) {
-            return null;
-        }
-        int open = html.indexOf('>', marker);
-        int close = open >= 0 ? html.indexOf("</script>", open) : -1;
-        if (open < 0 || close < 0) {
-            return null;
-        }
-        return html.substring(open + 1, close).trim();
     }
 
     private static void addQueryParam(UriBuilder uriBuilder, String name, Object value) {
@@ -176,34 +160,7 @@ public class OtodomScraper implements ListingSource {
         }
     }
 
-    private static String str(Object value, String fallback) {
-        return value != null ? value.toString() : fallback;
-    }
-
     private static String firstNonNull(String a, String b) {
         return a != null ? a : b;
-    }
-
-    private static String text(JsonNode node, String... path) {
-        JsonNode current = walk(node, path);
-        return current.isValueNode() && !current.isNull() ? current.asText() : null;
-    }
-
-    private static Double dbl(JsonNode node, String... path) {
-        JsonNode current = walk(node, path);
-        return current.isNumber() ? current.asDouble() : null;
-    }
-
-    private static BigDecimal dec(JsonNode node, String... path) {
-        JsonNode current = walk(node, path);
-        return current.isNumber() ? current.decimalValue() : null;
-    }
-
-    private static JsonNode walk(JsonNode node, String... path) {
-        JsonNode current = node;
-        for (String segment : path) {
-            current = current.path(segment);
-        }
-        return current;
     }
 }
