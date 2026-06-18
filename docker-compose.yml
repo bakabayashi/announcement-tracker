@@ -43,6 +43,10 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-dummy-client-id}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-dummy-client-secret}
       OLX_ACCESS_TOKEN: ${OLX_ACCESS_TOKEN:-}
+      OTODOM_ENABLED: ${OTODOM_ENABLED:-false}
+      OTOMOTO_ENABLED: ${OTOMOTO_ENABLED:-false}
+      # Optional Spring config override (e.g. app.security.admin-emails) for local runs.
+      SPRING_APPLICATION_JSON: ${SPRING_APPLICATION_JSON:-}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
 
